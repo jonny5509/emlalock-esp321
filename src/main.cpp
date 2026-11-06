@@ -276,6 +276,7 @@ async function load(){
       else $('handoverInfo').classList.add('hidden');
       return;
     }
+    window.handoverPending=!!x.handoverPending;
     $('settingsBack').classList.add('hidden');$('setup').classList.add('hidden');$('dash').classList.remove('hidden');window.savedRole=x.role||'';window.roleLocked=!!window.savedRole;window.credentialsLocked=true;setMode(x.role);refresh();
   }catch(e){
     startTimeMs=0;
@@ -352,7 +353,7 @@ function backToDashboard(){
 async function showSettings(){
   try{
     const x=await jsonFetch('/api/config');
-    $('settingsBack').classList.remove('hidden');$('dash').classList.add('hidden');$('setup').classList.remove('hidden');$('apInfo').classList.toggle('hidden',!x.setupAP);selectedRole=x.role||'';window.savedRole=selectedRole;window.roleLocked=!!selectedRole;window.credentialsLocked=!!x.configured;
+    $('settingsBack').classList.remove('hidden');$('dash').classList.add('hidden');$('setup').classList.remove('hidden');$('apInfo').classList.toggle('hidden',!x.setupAP);window.handoverPending=!!x.handoverPending;selectedRole=x.role||'';window.savedRole=selectedRole;window.roleLocked=!!selectedRole;window.credentialsLocked=!!x.configured;
     if(selectedRole)chooseRole(selectedRole);
     initTheme();
     ['Wearer','Holder','Alone'].forEach(r=>$('role'+r).disabled=window.roleLocked);
