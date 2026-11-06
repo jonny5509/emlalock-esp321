@@ -114,7 +114,7 @@ const char INDEX_HTML[] PROGMEM = R"HTML(
   </div>
 
   <div class="card">
-    <div class="statusline"><span class="muted">Account</span><span class="statusValue" id="who">--</span></div>
+    <div class="statusline" id="accountLine"><span class="muted">Account</span><span class="statusValue" id="who">--</span></div>
     <div class="statusline"><span class="muted">Session status</span><span class="statusValue" id="sessionStatus">--</span></div>
     <div class="statusline"><span class="muted">Minimum</span><span class="statusValue" id="minimum">--</span></div>
     <div class="statusline"><span class="muted">Maximum</span><span class="statusValue" id="maximum">--</span></div>
@@ -268,7 +268,7 @@ async function load(){
     if(!x.configured){
       window.handoverPending=!!x.handoverPending;
       window.roleLocked=window.handoverPending;window.savedRole=window.handoverPending?'holder':'';window.credentialsLocked=false;
-      ['Wearer','Holder','Alone'].forEach(r=>$('role'+r).disabled=window.handoverPending);
+      ['Wearer','Holder'].forEach(r=>$('role'+r).disabled=window.handoverPending);
       $('keyFields').classList.remove('hidden');$('keyLockedNotice').classList.add('hidden');
       startTimeMs=0;
       endTimeMs=0;
