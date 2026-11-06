@@ -594,6 +594,13 @@ void captive(){server.sendHeader("Location","http://192.168.4.1/",true);server.s
 
 void noContent(){server.send(204,"text/plain","");}
 
+void stopSetupAP(){
+  dnsServer.stop();
+  WiFi.softAPdisconnect(true);
+  setupAP=false;
+  WiFi.mode(WIFI_STA);
+}
+
 void startSetupAP(){
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAPConfig(AP_IP,AP_GATEWAY,AP_SUBNET);
@@ -608,14 +615,14 @@ bool connectWiFi(){
   if(!cfg.wifiSsid.length())return false;
   WiFi.mode(WIFI_AP_STA);
   if(WiFi.status()==WL_CONNECTED){
-    if(WiFi.SSID()==cfg.wifiSsid){setupAP=false;return true;}
+    if(WiFi.SSID()==cfg.wifiSsid){stopSetupAP();return true;}
     WiFi.disconnect(false,false);
     delay(50);
   }
   WiFi.begin(cfg.wifiSsid.c_str(),cfg.wifiPass.c_str());
   unsigned long start=millis();
   while(WiFi.status()!=WL_CONNECTED&&millis()-start<WIFI_TIMEOUT_MS){server.handleClient();delay(50);}
-  if(WiFi.status()==WL_CONNECTED){setupAP=false;Serial.print("Wi-Fi connected: ");Serial.println(WiFi.localIP());return true;}
+  if(WiFi.status()==WL_CONNECTED){stopSetupAP();Serial.print("Wi-Fi connected: ");Serial.println(WiFi.localIP());return true;}
   Serial.println("Wi-Fi connection failed");
   startSetupAP();
   return false;
