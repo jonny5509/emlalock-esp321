@@ -193,7 +193,7 @@ function chooseRole(role){
   $('fields').classList.remove('hidden');
   $('holderField').classList.toggle('hidden',role!=='holder');
   $('roleSection').classList.toggle('hidden',!!window.roleLocked||!!window.handoverPending);
-  $('wearerFields').classList.toggle('hidden',!!window.handoverPending||role==='holder');
+  $('wearerFields').classList.toggle('hidden',!!window.handoverPending||(!!window.roleLocked&&role==='holder'));
   $('handoverInfo').classList.toggle('hidden',!window.handoverPending);
   $('roleText').textContent=window.handoverPending?'Key Holder handover setup: enter your Wi-Fi and your own Key Holder API key. Wearer credentials are already stored privately.':role==='holder'?'Key Holder mode is locked.':'Wearer mode uses your wearer credentials.';
 }
