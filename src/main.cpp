@@ -160,7 +160,7 @@ const char INDEX_HTML[] PROGMEM = R"HTML(
   </div>
   <div class="card footerActions">
     <button type="button" class="secondary" onclick="showSettings()">Settings</button>
-    <button type="button" class="danger" onclick="clearCfg()">Clear credentials</button>
+    <button type="button" id="clearCredentialsBtn" class="danger" onclick="clearCfg()">Clear credentials</button>
   </div>
 </section>
 </main>
@@ -193,7 +193,7 @@ function chooseRole(role){
   });
   $('fields').classList.remove('hidden');
   $('holderField').classList.toggle('hidden',role!=='holder');
-  $('wearerFields').classList.toggle('hidden',!!window.handoverPending);
+  $('wearerFields').classList.toggle('hidden',!!window.handoverPending||role==='holder');
   $('handoverInfo').classList.toggle('hidden',!window.handoverPending);
   $('roleText').textContent=window.handoverPending?'Key Holder handover setup: enter your Wi-Fi and your own Key Holder API key. Wearer credentials are already stored privately.':role==='holder'?'Key Holder mode uses the wearer credentials and a holder API key.':role==='alone'?'Alone mode uses only the wearer credentials.':'Wearer mode uses your wearer credentials.';
 }
@@ -512,7 +512,7 @@ void handleConfigPost(){
   JsonDocument d;
   if(deserializeJson(d,server.arg("plain"))){server.send(400,"application/json",R"({"ok":false,"error":"Invalid JSON"})");return;}
   String role=d["role"]|"";String ssid=d["ssid"]|"";String pass=d["wifiPass"]|"";String uid=d["userId"]|"";String key=d["apiKey"]|"";String hkey=d["holderApiKey"]|"";
-  if(role!="wearer"&&role!="holder"&&role!="alone"){server.send(400,"application/json",R"({"ok":false,"error":"Invalid role"})");return;}
+  if(role!="wearer"&&role!="holder"){server.send(400,"application/json",R"({"ok":false,"error":"Invalid role"})");return;}
   if(cfg.handoverPending){
     if(role!="holder"||!ssid.length()||!hkey.length()) {server.send(400,"application/json",R"({"ok":false,"error":"Handover setup requires Wi-Fi and a Key Holder API key."})");return;}
     prefs.begin("emlalock",false);
