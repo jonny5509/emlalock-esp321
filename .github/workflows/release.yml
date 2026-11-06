@@ -1,0 +1,140 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/update_manager.h
+      - src/update_manager.cpp
+      - platformio.ini
+      - partitions/esp32c3_ota.csv
+      - .github/workflows/release.yml
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (leave blank to use src/update_manager.h)
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Determine version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          import re
+          import subprocess
+
+          requested = os.environ.get("INPUT_VERSION", "").strip()
+          text = Path("src/update_manager.h").read_text()
+          match = re.search(r'#define\s+EMLALOCK_VERSION\s+"([^"]+)"', text)
+          if not match:
+              raise SystemExit("EMLALOCK_VERSION definition was not found")
+
+          version = requested or match.group(1)
+          if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+              raise SystemExit(f"Invalid release version: {version}")
+
+          latest = ""
+          try:
+              latest = subprocess.check_output(
+                  ["gh", "release", "view", "--json", "tagName", "-q", ".tagName"],
+                  text=True,
+                  stderr=subprocess.DEVNULL,
+              ).strip()
+          except subprocess.CalledProcessError:
+              pass
+
+          if latest == f"v{version}":
+              print(f"Release v{version} already exists; nothing to do.")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+                  out.write("skip=true\n")
+                  out.write(f"version={version}\n")
+              raise SystemExit(0)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("skip=false\n")
+              out.write(f"version={version}\n")
+          PY
+
+      - name: Install PlatformIO
+        if: steps.version.outputs.skip != 'true'
+        run: pip install platformio
+
+      - name: Set firmware version
+        if: steps.version.outputs.skip != 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import os
+
+          version = os.environ["VERSION"]
+          path = Path("src/update_manager.h")
+          text = path.read_text()
+          import re
+          text = re.sub(
+              r'#define\s+EMLALOCK_VERSION\s+"[^"]+"',
+              f'#define EMLALOCK_VERSION "{version}"',
+              text,
+              count=1,
+          )
+          path.write_text(text)
+          PY
+
+      - name: Build ESP32
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          pio run -e esp32dev
+          cp .pio/build/esp32dev/firmware.bin "EmlaLock-${{ steps.version.outputs.version }}-esp32.bin"
+
+      - name: Build ESP32-C3
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          pio run -e esp32-c3-devkitm-1
+          cp .pio/build/esp32-c3-devkitm-1/firmware.bin "EmlaLock-${{ steps.version.outputs.version }}-esp32c3.bin"
+
+      - name: Build ESP32-S2
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          pio run -e esp32-s2-saola-1
+          cp .pio/build/esp32-s2-saola-1/firmware.bin "EmlaLock-${{ steps.version.outputs.version }}-esp32s2.bin"
+
+      - name: Build ESP32-S3
+        if: steps.version.outputs.skip != 'true'
+        run: |
+          pio run -e esp32-s3-devkitc-1
+          cp .pio/build/esp32-s3-devkitc-1/firmware.bin "EmlaLock-${{ steps.version.outputs.version }}-esp32s3.bin"
+
+      - name: Publish release
+        if: steps.version.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" \
+            "EmlaLock-${VERSION}-esp32.bin" \
+            "EmlaLock-${VERSION}-esp32c3.bin" \
+            "EmlaLock-${VERSION}-esp32s2.bin" \
+            "EmlaLock-${VERSION}-esp32s3.bin" \
+            --title "EmlaLock v${VERSION}" \
+            --generate-notes
