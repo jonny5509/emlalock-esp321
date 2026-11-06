@@ -8,7 +8,9 @@ ESP32 dashboard for monitoring an EmlaLock session, with a wearer-to-keyholder h
 2. The wearer selects **Hand Over** from the dashboard.
 3. The firmware preserves the wearer User ID and API key in ESP32 NVS, clears the saved Wi-Fi SSID/password and any previous keyholder API key, and restarts the setup access point.
 4. The keyholder connects to the setup network and enters their own Wi-Fi details and their own EmlaLock API key. The wearer User ID and API key are not shown or requested.
-5. The dashboard runs in Key Holder mode.
+5. The dashboard runs in locked Key Holder mode. Wearer identity and wearer credential controls are hidden from the keyholder. Alone mode is not available.
+
+In Key Holder mode, the dashboard hides the wearer account identity and wearer credential/configuration controls. The role cannot be changed from Key Holder after handover. The Clear Credentials control is hidden from the keyholder dashboard. Alone mode has been removed.
 
 The firmware uses the stored wearer credentials for session information and for the documented Add Time endpoint. For Subtract Time, it sends both the stored wearer credentials and the keyholder API key. EmlaLock's documented Add Time endpoint does not accept a holder API key; this is an API limitation, not a firmware setting.
 
