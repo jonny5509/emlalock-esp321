@@ -69,13 +69,12 @@ const char INDEX_HTML[] PROGMEM = R"HTML(
     <option value="system">System</option>
   </select>
 
-  <h3>Role</h3>
+  <div id="roleSection"><h3>Role</h3>
   <div class="roles">
     <button type="button" id="roleWearer" onclick="chooseRole('wearer')">Wearer</button>
     <button type="button" id="roleHolder" onclick="chooseRole('holder')">Key Holder</button>
-    <button type="button" id="roleAlone" onclick="chooseRole('alone')">Alone</button>
-  </div>
-  <p id="roleText" class="muted small"></p>
+   </div>
+  <p id="roleText" class="muted small"></p></div>
 
   <div id="fields" class="hidden">
     <h3>Wi-Fi</h3>
@@ -188,11 +187,12 @@ function chooseRole(role){
   if(window.handoverPending)role='holder';
   if(window.roleLocked&&role!==selectedRole)return;
   selectedRole=role;
-  ['wearer','holder','alone'].forEach(r=>{
+  ['wearer','holder'].forEach(r=>{
     $('role'+r.charAt(0).toUpperCase()+r.slice(1)).classList.toggle('selected',r===role);
   });
   $('fields').classList.remove('hidden');
   $('holderField').classList.toggle('hidden',role!=='holder');
+  $('roleSection').classList.toggle('hidden',!!window.roleLocked||!!window.handoverPending);
   $('wearerFields').classList.toggle('hidden',!!window.handoverPending||role==='holder');
   $('handoverInfo').classList.toggle('hidden',!window.handoverPending);
   $('roleText').textContent=window.handoverPending?'Key Holder handover setup: enter your Wi-Fi and your own Key Holder API key. Wearer credentials are already stored privately.':role==='holder'?'Key Holder mode uses the wearer credentials and a holder API key.':role==='alone'?'Alone mode uses only the wearer credentials.':'Wearer mode uses your wearer credentials.';
@@ -200,13 +200,15 @@ function chooseRole(role){
 
 function setMode(role){
   selectedRole=role;
+  document.body.classList.toggle('holder-mode',role==='holder');
+  $('accountLine').classList.toggle('hidden',role==='holder');
+  $('clearCredentialsBtn').classList.toggle('hidden',role==='holder');
   $('handoverCard').classList.toggle('hidden',role!=='wearer');
-  $('modeName').textContent=role==='holder'?'Key Holder Mode':role==='alone'?'Alone Mode':'Wearer Mode';
+  $('modeName').textContent=role==='holder'?'Key Holder Mode':'Wearer Mode';
   const holder=role==='holder';
-  const alone=role==='alone';
-  $('durationOp').value='add';
+   $('durationOp').value='add';
   $('durationOp').querySelector('option[value="sub"]').disabled=!holder;
-  $('subNote').textContent=alone?'Subtract time is unavailable in Alone mode because EmlaLock requires a holder.':'Subtract time is only available in Key Holder mode.';
+  $('subNote').textContent='Subtract time is only available in Key Holder mode.';
   $('subNote').classList.toggle('hidden',holder);
 }
 
@@ -272,7 +274,7 @@ async function load(){
       endTimeMs=0;
       $('settingsBack').classList.add('hidden');
       $('setup').classList.remove('hidden');$('dash').classList.add('hidden');$('apInfo').classList.toggle('hidden',!x.setupAP);$('wifiInfo').textContent=window.handoverPending?'Enter your Wi-Fi and Key Holder API key to finish handover.':(x.setupAP?'Setup access point is active.':(x.ssid?'Saved Wi-Fi: '+x.ssid:'Enter your Wi-Fi and EmlaLock credentials.'));$('ssidManual').value=x.ssid||'';
-      if(window.handoverPending){selectedRole='holder';chooseRole('holder');$('roleWearer').disabled=true;$('roleHolder').disabled=true;$('roleAlone').disabled=true;$('holderField').classList.remove('hidden');}
+      if(window.handoverPending){selectedRole='holder';chooseRole('holder');$('roleWearer').disabled=true;$('roleHolder').disabled=true; $('holderField').classList.remove('hidden');}
       else $('handoverInfo').classList.add('hidden');
       return;
     }
@@ -358,6 +360,9 @@ async function showSettings(){
     initTheme();
     ['Wearer','Holder','Alone'].forEach(r=>$('role'+r).disabled=window.roleLocked);
     $('keyFields').classList.toggle('hidden',window.credentialsLocked);$('keyLockedNotice').classList.toggle('hidden',!window.credentialsLocked);
+    $('roleSection').classList.toggle('hidden',!!window.roleLocked||!!window.handoverPending);
+    $('wearerFields').classList.toggle('hidden',selectedRole==='holder'||!!window.handoverPending);
+    $('holderField').classList.toggle('hidden',selectedRole!=='holder');
     $('ssidManual').value=x.ssid||'';$('uid').value=x.userId||'';
   }catch(e){alert(e.message)}
 }
