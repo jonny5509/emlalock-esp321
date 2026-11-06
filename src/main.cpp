@@ -550,9 +550,10 @@ void handleHandover(){
   prefs.putBool("handover",true);
   prefs.end();
   cfg.role="holder";cfg.wifiSsid="";cfg.wifiPass="";cfg.holderApiKey="";cfg.handoverPending=true;
+  server.send(200,"application/json",R"({"ok":true,"handoverPending":true})");
+  delay(150);
   WiFi.disconnect(false,false);
   startSetupAP();
-  server.send(200,"application/json",R"({"ok":true,"handoverPending":true})");
 }
 
 void handleClear(){
