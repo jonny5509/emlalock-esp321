@@ -494,7 +494,14 @@ void handleStatus(){
   if(!apiGet("info?userid="+enc(cfg.userId)+"&apikey="+enc(cfg.apiKey),out)){d["ok"]=false;d["error"]=lastError;sendJson(200,d);return;}
   JsonDocument info;
   if(deserializeJson(info,out)){d["ok"]=false;d["error"]="Invalid JSON from EmlaLock";sendJson(200,d);return;}
-  d["ok"]=true;d["user"]=info["user"];d["chastitysession"]=info["chastitysession"];sendJson(200,d);
+  d["ok"]=true;
+  JsonObject user=info["user"].as<JsonObject>();
+  user.remove("userid");
+  d["user"]=user;
+  JsonObject session=info["chastitysession"].as<JsonObject>();
+  session.remove("wearerid");session.remove("holderid");session.remove("creatorid");session.remove("offeruserid");
+  d["chastitysession"]=session;
+  sendJson(200,d);
 }
 
 void handleConfigGet(){
@@ -575,7 +582,7 @@ void handleAction(){
   if(op=="sub"&&cfg.holderApiKey.length())path+="&holderapikey="+enc(cfg.holderApiKey);
   String out;
   if(!apiGet(path,out)){JsonDocument e;e["ok"]=false;e["error"]=lastError;sendJson(502,e);return;}
-  JsonDocument r;r["ok"]=true;r["response"]=out;sendJson(200,r);
+  JsonDocument r;r["ok"]=true;sendJson(200,r);
 }
 
 void captive(){server.sendHeader("Location","http://192.168.4.1/",true);server.send(302,"text/plain","");}
