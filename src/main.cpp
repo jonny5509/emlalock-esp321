@@ -195,7 +195,7 @@ function chooseRole(role){
   $('roleSection').classList.toggle('hidden',!!window.roleLocked||!!window.handoverPending);
   $('wearerFields').classList.toggle('hidden',!!window.handoverPending||role==='holder');
   $('handoverInfo').classList.toggle('hidden',!window.handoverPending);
-  $('roleText').textContent=window.handoverPending?'Key Holder handover setup: enter your Wi-Fi and your own Key Holder API key. Wearer credentials are already stored privately.':role==='holder'?'Key Holder mode uses the wearer credentials and a holder API key.':role==='alone'?'Alone mode uses only the wearer credentials.':'Wearer mode uses your wearer credentials.';
+  $('roleText').textContent=window.handoverPending?'Key Holder handover setup: enter your Wi-Fi and your own Key Holder API key. Wearer credentials are already stored privately.':role==='holder'?'Key Holder mode is locked.':'Wearer mode uses your wearer credentials.';
 }
 
 function setMode(role){
@@ -358,12 +358,12 @@ async function showSettings(){
     $('settingsBack').classList.remove('hidden');$('dash').classList.add('hidden');$('setup').classList.remove('hidden');$('apInfo').classList.toggle('hidden',!x.setupAP);window.handoverPending=!!x.handoverPending;selectedRole=x.role||'';window.savedRole=selectedRole;window.roleLocked=!!selectedRole;window.credentialsLocked=!!x.configured;
     if(selectedRole)chooseRole(selectedRole);
     initTheme();
-    ['Wearer','Holder','Alone'].forEach(r=>$('role'+r).disabled=window.roleLocked);
+    ['Wearer','Holder'].forEach(r=>$('role'+r).disabled=window.roleLocked);
     $('keyFields').classList.toggle('hidden',window.credentialsLocked);$('keyLockedNotice').classList.toggle('hidden',!window.credentialsLocked);
     $('roleSection').classList.toggle('hidden',!!window.roleLocked||!!window.handoverPending);
     $('wearerFields').classList.toggle('hidden',selectedRole==='holder'||!!window.handoverPending);
     $('holderField').classList.toggle('hidden',selectedRole!=='holder');
-    $('ssidManual').value=x.ssid||'';$('uid').value=x.userId||'';
+    $('ssidManual').value=x.ssid||'';$('uid').value='';
   }catch(e){alert(e.message)}
 }
 
